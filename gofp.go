@@ -44,24 +44,26 @@ func CheckPermission(dirPath string) {
 }
 
 func walkFunc(path string, file os.FileInfo, err error) error {
+	filename := file.Name()
+
 	if file.IsDir() {
 		if file.Mode().String() != "drwxrwxr-x" {
 			err = os.Chmod(path, 0775)
-			displayLog(file, err)
+			displayLog(&filename, err)
 		}
 	} else {
 		if file.Mode().String() != "-rw-rw-r--" {
 			err = os.Chmod(path, 0664)
-			displayLog(file, err)
+			displayLog(&filename, err)
 		}
 	}
 	return nil
 }
 
-func displayLog(file os.FileInfo, err error) {
+func displayLog(filename *string, err error) {
 	if err != nil {
 		log.Println(err)
 	} else {
-		log.Println("Fixed: ", file.Name())
+		log.Println("Fixed: ", *filename)
 	}
 }
