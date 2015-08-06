@@ -21,8 +21,8 @@ func TestCheckPermission(t *testing.T) {
 		file, _ := os.Create(path.Join(dir_path, v[1]))
 		file.Chmod(0666)
 	}
-
-	CheckPermission(test_dir)
+	r := &Result{0, 0}
+	CheckPermission(test_dir, r)
 
 	for _, v := range tmp {
 		dir_path := path.Join(test_dir, v[0])

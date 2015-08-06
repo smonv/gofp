@@ -2,61 +2,73 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
+type Result struct {
+	Dir  int
+	File int
+}
+
 func main() {
 	defer os.Exit(1)
 
 	flag.Parse()
-	src_dir := strings.TrimSpace(flag.Arg(0))
-	CheckPermission(src_dir)
+	dirPath := strings.TrimSpace(flag.Arg(0))
+	result := &Result{0, 0}
+	result = CheckPermission(dirPath, result)
+	if result != nil {
+		fmt.Println("Total Fixed Dir: ", result.Dir)
+		fmt.Println("Total Fixed File: ", result.File)
+	}
 }
 
-func CheckPermission(dirPath string) {
+func CheckPermission(dirPath string, r *Result) (result *Result) {
 	if dirPath == "" {
 		log.Println("Please input path to check!")
 	} else {
 		src, err := os.Stat(dirPath)
 		if err != nil {
-			log.Println(err)
+			log.Fatal(err)
 		}
 		if src.IsDir() {
 			log.Println("Checking: " + dirPath)
 			fullPath, _ := filepath.Abs(dirPath)
-			if err = filepath.Walk(fullPath, walkFunc); err != nil {
-				log.Println(err)
+			if err = filepath.Walk(fullPath, r.Visit); err != nil {
+				log.Fatal(err)
+			} else {
+				return r
 			}
 		} else {
 			log.Println("Source path not is directory")
 		}
 	}
-}
-
-func walkFunc(path string, file os.FileInfo, err error) error {
-	filename := file.Name()
-
-	if file.IsDir() {
-		if file.Mode().String() != "drwxrwxr-x" {
-			err = os.Chmod(path, 0775)
-			displayLog(&filename, err)
-		}
-	} else {
-		if file.Mode().String() != "-rw-rw-r--" {
-			err = os.Chmod(path, 0664)
-			displayLog(&filename, err)
-		}
-	}
 	return nil
 }
 
-func displayLog(filename *string, err error) {
-	if err != nil {
-		log.Println(err)
+func (r *Result) Visit(path string, file os.FileInfo, err error) error {
+	if file.IsDir() {
+		if file.Mode().String() != "drwxrwxr-x" {
+			if err = os.Chmod(path, 0775); err == nil {
+				log.Println("Fixed: ", file.Name())
+				r.Dir++
+			} else {
+				log.Panic(err)
+			}
+		}
 	} else {
-		log.Println("Fixed: ", *filename)
+		if file.Mode().String() != "-rw-rw-r--" {
+			if err = os.Chmod(path, 0664); err == nil {
+				log.Println("Fixed: ", file.Name())
+				r.File++
+			} else {
+				log.Panic(err)
+			}
+		}
 	}
+	return nil
 }
