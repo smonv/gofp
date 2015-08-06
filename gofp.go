@@ -5,28 +5,30 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func main() {
+	defer os.Exit(1)
+
 	flag.Parse()
-	src_dir := flag.Arg(0)
+	src_dir := strings.TrimSpace(flag.Arg(0))
+
 	if src_dir == "" {
-		src_dir = "/mnt"
-	}
-
-	log.Println("Checking: " + src_dir)
-
-	src, err := os.Stat(src_dir)
-	if err != nil {
-		panic(err)
-	}
-
-	if src.IsDir() {
-		CheckPermission(src_dir)
+		log.Println("Please input path to check!")
 	} else {
-		log.Println("Source path not is directory")
+		src, err := os.Stat(src_dir)
+		if err != nil {
+			log.Println(err)
+		}
+
+		if src.IsDir() {
+			log.Println("Checking: " + src_dir)
+			CheckPermission(src_dir)
+		} else {
+			log.Println("Source path not is directory")
+		}
 	}
-	os.Exit(1)
 }
 
 func CheckPermission(dirPath string) {
