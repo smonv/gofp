@@ -13,35 +13,26 @@ func main() {
 
 	flag.Parse()
 	src_dir := strings.TrimSpace(flag.Arg(0))
-
-	if src_dir == "" {
-		log.Println("Please input path to check!")
-	} else {
-		src, err := os.Stat(src_dir)
-		if err != nil {
-			log.Println(err)
-		}
-
-		if src.IsDir() {
-			log.Println("Checking: " + src_dir)
-			CheckPermission(src_dir)
-		} else {
-			log.Println("Source path not is directory")
-		}
-	}
+	CheckPermission(src_dir)
 }
 
 func CheckPermission(dirPath string) {
-	fullPath, err := filepath.Abs(dirPath)
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = filepath.Walk(fullPath, walkFunc)
-
-	if err != nil {
-		panic(err)
+	if dirPath == "" {
+		log.Println("Please input path to check!")
+	} else {
+		src, err := os.Stat(dirPath)
+		if err != nil {
+			log.Println(err)
+		}
+		if src.IsDir() {
+			log.Println("Checking: " + dirPath)
+			fullPath, _ := filepath.Abs(dirPath)
+			if err = filepath.Walk(fullPath, walkFunc); err != nil {
+				log.Println(err)
+			}
+		} else {
+			log.Println("Source path not is directory")
+		}
 	}
 }
 
