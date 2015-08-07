@@ -33,13 +33,13 @@ func CheckPermission(dirPath string, r *Result) (result *Result) {
 	} else {
 		src, err := os.Stat(dirPath)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 		if src.IsDir() {
 			log.Println("Checking: " + dirPath)
 			fullPath, _ := filepath.Abs(dirPath)
 			if err = filepath.Walk(fullPath, r.Visit); err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			} else {
 				return r
 			}
@@ -57,7 +57,7 @@ func (r *Result) Visit(path string, file os.FileInfo, err error) error {
 				log.Println("Fixed: ", file.Name())
 				r.Dir++
 			} else {
-				log.Panic(err)
+				log.Println(err)
 			}
 		}
 	} else {
@@ -66,7 +66,7 @@ func (r *Result) Visit(path string, file os.FileInfo, err error) error {
 				log.Println("Fixed: ", file.Name())
 				r.File++
 			} else {
-				log.Panic(err)
+				log.Println(err)
 			}
 		}
 	}
