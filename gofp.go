@@ -34,6 +34,7 @@ func CheckPermission(dirPath string, r *Result) (result *Result) {
 		src, err := os.Stat(dirPath)
 		if err != nil {
 			log.Println(err)
+			return nil
 		}
 		if src.IsDir() {
 			log.Println("Checking: " + dirPath)

@@ -1,10 +1,34 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
+	"io"
 	"os"
 	"path"
+	"strings"
 	"testing"
 )
+
+func TestCheckPermissionNonExistPath(t *testing.T) {
+	test_dir := "/tmp/gofp"
+	result := &Result{0, 0}
+	stdout := os.Stdout
+
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	CheckPermission(test_dir, result)
+
+	w.Close()
+	os.Stdout = stdout
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	fmt.Println(buf.String())
+	if !strings.Contains(buf.String(), "no such file or directory") {
+		fmt.Println(strings.Contains(buf.String(), "no such file or directory"))
+	}
+}
 
 func TestCheckPermission(t *testing.T) {
 	test_dir := "/tmp/gofp"
