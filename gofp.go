@@ -53,8 +53,8 @@ func CheckPermission(dirPath string, r *Result) (result *Result) {
 
 func (r *Result) Visit(path string, file os.FileInfo, err error) error {
 	if file.IsDir() {
-		if file.Mode().String() != "drwxrwxr-x" {
-			if err = os.Chmod(path, 0775); err == nil {
+		if file.Mode().String() != "drwxr-xr-x" {
+			if err = os.Chmod(path, 0755); err == nil {
 				log.Println("Fixed: ", file.Name())
 				r.Dir++
 			} else {
@@ -62,8 +62,8 @@ func (r *Result) Visit(path string, file os.FileInfo, err error) error {
 			}
 		}
 	} else {
-		if file.Mode().String() != "-rw-rw-r--" {
-			if err = os.Chmod(path, 0664); err == nil {
+		if file.Mode().String() != "-rw-r--r--" {
+			if err = os.Chmod(path, 0644); err == nil {
 				log.Println("Fixed: ", file.Name())
 				r.File++
 			} else {

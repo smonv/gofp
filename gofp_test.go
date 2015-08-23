@@ -1,34 +1,10 @@
 package main
 
 import (
-	"bytes"
-	"fmt"
-	"io"
 	"os"
 	"path"
-	"strings"
 	"testing"
 )
-
-func TestCheckPermissionNonExistPath(t *testing.T) {
-	test_dir := "/tmp/gofp"
-	result := &Result{0, 0}
-	stdout := os.Stdout
-
-	r, w, _ := os.Pipe()
-	os.Stdout = w
-
-	CheckPermission(test_dir, result)
-
-	w.Close()
-	os.Stdout = stdout
-	var buf bytes.Buffer
-	io.Copy(&buf, r)
-	fmt.Println(buf.String())
-	if !strings.Contains(buf.String(), "no such file or directory") {
-		fmt.Println(strings.Contains(buf.String(), "no such file or directory"))
-	}
-}
 
 func TestCheckPermission(t *testing.T) {
 	test_dir := "/tmp/gofp"
@@ -51,12 +27,12 @@ func TestCheckPermission(t *testing.T) {
 	for _, v := range tmp {
 		dir_path := path.Join(test_dir, v[0])
 		dir, _ := os.Stat(dir_path)
-		if dir.Mode().String() != "drwxrwxr-x" {
+		if dir.Mode().String() != "drwxr-xr-x" {
 			t.Error(dir.Name(), "wrong permission: ", dir.Mode())
 		}
 
 		file, _ := os.Stat(path.Join(dir_path, v[1]))
-		if file.Mode().String() != "-rw-rw-r--" {
+		if file.Mode().String() != "-rw-r--r--" {
 			t.Error(file.Name(), "wrong permission: ", file.Mode())
 		}
 	}
