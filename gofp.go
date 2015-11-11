@@ -16,62 +16,86 @@ type Result struct {
 func main() {
 	defer os.Exit(1)
 
-	dirPath := flag.String("path", "", "directory path")
+	cPath := flag.String("p", "", "check path")
+
 	flag.Parse()
-	if *dirPath != "" {
-		result := &Result{0, 0}
-		result = CheckPermission(*dirPath, result)
-		if result != nil {
-			fmt.Println("Total Fixed Dir: ", result.Dir)
-			fmt.Println("Total Fixed File: ", result.File)
+
+	if *cPath != "" {
+		r := &Result{0, 0}
+		err := r.checkPermission(*cPath)
+		if err == nil {
+			fmt.Println("Total Fixed Dir: ", r.Dir)
+			fmt.Println("Total Fixed File: ", r.File)
+		} else {
+			log.Fatal(err)
 		}
 	} else {
 		log.Panic("Please input path to check!")
 	}
 }
 
-func CheckPermission(dirPath string, r *Result) (result *Result) {
-	src, err := os.Stat(dirPath)
+func (r *Result) checkPermission(cPath string) error {
+	src, err := os.Stat(cPath)
 
 	if err != nil {
 		log.Fatal(err)
 		return nil
 	}
 
+	fullPath, _ := filepath.Abs(cPath)
 	if src.IsDir() {
-		log.Println("Checking: " + dirPath)
-		fullPath, _ := filepath.Abs(dirPath)
-
-		if err = filepath.Walk(fullPath, r.Visit); err != nil {
-			log.Println(err)
-		} else {
-			return r
+		log.Println("Checking: " + cPath)
+		if err = filepath.Walk(fullPath, r.visit); err != nil {
+			return err
 		}
-
 	} else {
-		log.Fatal("Source path not is directory")
+		err := r.checkFile(fullPath, src)
+
+		if err != nil {
+			log.Println(err)
+		}
 	}
 	return nil
 }
 
-func (r *Result) Visit(path string, file os.FileInfo, err error) error {
-	if file.IsDir() {
-		if file.Mode().String() != "drwxr-xr-x" {
-			if err = os.Chmod(path, 0755); err == nil {
-				log.Println("Fixed: ", file.Name())
-				r.Dir++
-			} else {
-				log.Println(err)
-			}
+func (r *Result) checkDirectory(p string, dir os.FileInfo) error {
+	if dir.Mode().String() != "drwxr-xr-x" {
+		err := os.Chmod(p, 0755)
+		if err == nil {
+			log.Println("Fixed:", dir.Name())
+			r.Dir++
+		} else {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *Result) checkFile(cPath string, file os.FileInfo) error {
+	if file.Mode().String() != "-rw-r--r--" {
+		err := os.Chmod(cPath, 0644)
+		if err == nil {
+			log.Println("Fixed: ", file.Name())
+			r.File++
+		} else {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *Result) visit(cPath string, fileInfo os.FileInfo, err error) error {
+	if fileInfo.IsDir() {
+		err = r.checkDirectory(cPath, fileInfo)
+
+		if err != nil {
+			log.Println(err)
 		}
 	} else {
-		if file.Mode().String() != "-rw-r--r--" {
-			if err = os.Chmod(path, 0644); err == nil {
-				log.Println("Fixed: ", file.Name())
-				r.File++
-			} else {
-				log.Println(err)
-			}
+		err = r.checkFile(cPath, fileInfo)
+
+		if err != nil {
+			log.Println(err)
 		}
 	}
 	return nil
